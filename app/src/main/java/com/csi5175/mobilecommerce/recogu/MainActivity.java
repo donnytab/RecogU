@@ -48,17 +48,21 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
 
         mApiClient.connect();
 
-        LocalBroadcastManager.getInstance(this).registerReceiver(
-                new BroadcastReceiver() {
-                    @Override
-                    public void onReceive(Context context, Intent intent) {
-                        String activityName = intent.getStringExtra(ActivityRecognizedService.ACTIVITY_RECOGNITION_TYPE_NAME);
-                        int icon = intent.getIntExtra(ActivityRecognizedService.ACTIVITY_RECOGNITION_TYPE_ICON, 0);
+        BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                String activityName = intent.getStringExtra(ActivityRecognizedService.ACTIVITY_RECOGNITION_TYPE_NAME);
+                String confidence = intent.getStringExtra(ActivityRecognizedService.ACTIVITY_RECOGNITION_TYPE_CONFIDENCE);
+                int icon = intent.getIntExtra(ActivityRecognizedService.ACTIVITY_RECOGNITION_TYPE_ICON, 0);
 
-                        txtActivity.setText(activityName);
-                        imgActivity.setImageResource(icon);
-                    }
-                },
+                txtActivity.setText(activityName);
+                txtConfidence.setText(confidence);
+                imgActivity.setImageResource(icon);
+            }
+        };
+
+        LocalBroadcastManager.getInstance(this).registerReceiver(
+                broadcastReceiver,
                 new IntentFilter(ActivityRecognizedService.ACTION)
         );
     }

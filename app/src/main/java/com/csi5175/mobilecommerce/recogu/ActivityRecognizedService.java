@@ -15,6 +15,7 @@ public class ActivityRecognizedService extends IntentService{
 
     public static final String ACTIVITY_RECOGNITION_TYPE_NAME = "TYPE_NAME";
     public static final String ACTIVITY_RECOGNITION_TYPE_ICON = "TYPE_ICON";
+    public static final String ACTIVITY_RECOGNITION_TYPE_CONFIDENCE = "TYPE_CONFIDENCE";
     public static final String ACTION = ActivityRecognizedService.class.getName();
 
     public ActivityRecognizedService() {
@@ -38,12 +39,12 @@ public class ActivityRecognizedService extends IntentService{
 //            Toast toast;
 
             String activityName = "";
+            String confidence = Integer.toString(activity.getConfidence());
             int icon = 0;
             switch( activity.getType() ) {
                 case DetectedActivity.IN_VEHICLE: {
                     activityName = getString(R.string.activity_in_vehicle);
                     icon = R.drawable.ic_in_vehicle;
-
                     break;
                 }
                 case DetectedActivity.RUNNING: {
@@ -56,6 +57,7 @@ public class ActivityRecognizedService extends IntentService{
                     icon = R.drawable.ic_still;
                     break;
                 }
+
                 case DetectedActivity.WALKING: {
                     activityName = getString(R.string.activity_walking);
                     icon = R.drawable.ic_walking;
@@ -78,7 +80,9 @@ public class ActivityRecognizedService extends IntentService{
 
             Intent intent = new Intent(ACTION);
             intent.putExtra(ACTIVITY_RECOGNITION_TYPE_NAME, activityName);
+            intent.putExtra(ACTIVITY_RECOGNITION_TYPE_CONFIDENCE, confidence);
             intent.putExtra(ACTIVITY_RECOGNITION_TYPE_ICON, icon);
+            intent.setFlags(intent.FLAG_RECEIVER_FOREGROUND);
             LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
         }
     }
