@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">RecogU</string>
+    <string name="activity_in_vehicle">IN VEHICLE</string>
+    <string name="activity_running">RUNNING</string>
+    <string name="activity_still">STILL</string>
+    <string name="activity_walking">WALKING</string>
+    <string name="activity_unknown">UNKNOWN</string>
 </resources>
