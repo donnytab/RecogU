@@ -16,6 +16,7 @@
         <ImageView
             android:id="@+id/img_activity"
             android:layout_width="wrap_content"
+            android:layout_marginTop="200dp"
             android:layout_height="200dp" />
 
         <TextView
@@ -25,7 +26,8 @@
             android:layout_gravity="center_horizontal"
             android:textAllCaps="true"
             android:textColor="@color/colorPrimary"
-            android:textSize="18dp"
+            android:layout_marginTop="10dp"
+            android:textSize="20dp"
             android:textStyle="bold" />
 
         <TextView
@@ -35,24 +37,8 @@
             android:layout_gravity="center_horizontal"
             android:layout_marginTop="10dp"
             android:textAllCaps="true"
-            android:textSize="14dp" />
+            android:textSize="16dp" />
 
     </LinearLayout>
-
-    <Button
-        android:id="@+id/btn_start_tracking"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentLeft="true"
-        android:text="Start Tracking" />
-
-    <Button
-        android:id="@+id/btn_stop_tracking"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentRight="true"
-        android:text="Stop Tracking" />
 
 </RelativeLayout>
