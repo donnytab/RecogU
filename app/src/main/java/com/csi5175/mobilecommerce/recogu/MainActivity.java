@@ -1,19 +1,24 @@
 package com.csi5175.mobilecommerce.recogu;
 
+import android.annotation.SuppressLint;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Gravity;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -31,7 +36,15 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     private String mainName = MainActivity.class.getSimpleName();
     private TextView txtActivity, txtConfidence;
     private ImageView imgActivity;
+    private static final String DATABASE_NAME = "RecogDB";
+    private static final String TABLE_NAME = "time";
+    private static final String ID = "_id";
+    private static final String TYPE = "type";
+    private static final String TIMESTAMP = "timestamp";
+    private SQLiteDatabase sqlDB;
+    private Cursor cursor;
 
+    @SuppressLint("WrongConstant")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -42,6 +55,15 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         imgActivity = (ImageView) findViewById(R.id.img_activity);
 
         displayGreeting();
+
+        sqlDB = openOrCreateDatabase(DATABASE_NAME, SQLiteDatabase.CREATE_IF_NECESSARY, null);
+//        cursor = sqlDB.query(TABLE_NAME, null, null, null, null, null, null);
+        try{
+            String createTableQuery = "CREATE TABLE " + TABLE_NAME + "(" + ID + " INTEGER PRIMARY KEY AUTOINCREMENT," + TYPE + " TEXT NOT NULL, " + TIMESTAMP + " TEXT NOT NULL)";
+            sqlDB.execSQL(createTableQuery);
+        }catch(Exception e) {
+            Log.e("EXCEPTION", e.getStackTrace().toString());
+        }
 
         mApiClient = new GoogleApiClient.Builder(this)
                 .addApi(ActivityRecognition.API)
@@ -57,10 +79,22 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                 String activityName = intent.getStringExtra(ActivityRecognizedService.ACTIVITY_RECOGNITION_TYPE_NAME);
                 String confidence = intent.getStringExtra(ActivityRecognizedService.ACTIVITY_RECOGNITION_TYPE_CONFIDENCE);
                 int icon = intent.getIntExtra(ActivityRecognizedService.ACTIVITY_RECOGNITION_TYPE_ICON, 0);
+                String timestamp = intent.getStringExtra(ActivityRecognizedService.ACTIVITY_RECOGNITION_TYPE_TIMESTAMP);
 
                 txtActivity.setText(activityName);
                 txtConfidence.setText(confidence);
                 imgActivity.setImageResource(icon);
+
+                String selectQuery = "SELECT * FROM " + TABLE_NAME + " ORDER BY " + ID + " DESC LIMIT 1;";
+                Cursor cursor = sqlDB.rawQuery(selectQuery, null);
+                if (cursor.moveToFirst()) {
+                    String lastTimestamp = cursor.getString(cursor.getColumnIndex(TIMESTAMP));
+                    int duration = (Integer.valueOf(lastTimestamp)-Integer.valueOf(timestamp))/1000;
+                    String toastText = Integer.toString(duration);
+                    Toast.makeText(getApplicationContext(), toastText, Toast.LENGTH_LONG).show();
+//                Toast.makeText(getApplicationContext(), timestamp, Toast.LENGTH_LONG).show();
+                }
+
             }
         };
 
