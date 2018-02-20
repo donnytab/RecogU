@@ -38,10 +38,11 @@ public class ActivityRecognizedService extends IntentService{
     private void handleDetectedActivities(List<DetectedActivity> probableActivities) {
         for( DetectedActivity activity : probableActivities ) {
             int activityType = activity.getType();
+            int activityConfidence = activity.getConfidence();
 
-            if(activityType != LAST_ACTIVITY) {
+            if(activityType != LAST_ACTIVITY && activityConfidence > 30) {
                 String activityName = "";
-                String confidence = Integer.toString(activity.getConfidence());
+                String confidence = Integer.toString(activityConfidence);
                 int icon = 0;
 
                 LAST_ACTIVITY = activityType;
@@ -80,21 +81,26 @@ public class ActivityRecognizedService extends IntentService{
 //                    }
                         break;
                     }
-                    case DetectedActivity.UNKNOWN: {
-                        activityName = getString(R.string.activity_unknown);
-                        icon = R.drawable.ic_unknown;
+                    default: {
                         break;
                     }
+//                    case DetectedActivity.UNKNOWN: {
+//                        activityName = getString(R.string.activity_unknown);
+//                        icon = R.drawable.ic_unknown;
+//                        break;
+//                    }
                 }
                 Log.e( "ActivityRecogition", activityName + activity.getConfidence() );
 
-                Intent intent = new Intent(ACTION);
-                intent.putExtra(ACTIVITY_RECOGNITION_TYPE_NAME, activityName);
-                intent.putExtra(ACTIVITY_RECOGNITION_TYPE_CONFIDENCE, confidence);
-                intent.putExtra(ACTIVITY_RECOGNITION_TYPE_ICON, icon);
-                intent.putExtra(ACTIVITY_RECOGNITION_TYPE_TIMESTAMP, timestamp);
-                intent.setFlags(intent.FLAG_RECEIVER_FOREGROUND);
-                LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+                if(!activityName.equals("") && !confidence.equals("")) {
+                    Intent intent = new Intent(ACTION);
+                    intent.putExtra(ACTIVITY_RECOGNITION_TYPE_NAME, activityName);
+                    intent.putExtra(ACTIVITY_RECOGNITION_TYPE_CONFIDENCE, confidence);
+                    intent.putExtra(ACTIVITY_RECOGNITION_TYPE_ICON, icon);
+                    intent.putExtra(ACTIVITY_RECOGNITION_TYPE_TIMESTAMP, timestamp);
+                    intent.setFlags(intent.FLAG_RECEIVER_FOREGROUND);
+                    LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+                }
             }
         }
     }

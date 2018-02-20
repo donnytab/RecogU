@@ -3,6 +3,7 @@ package com.csi5175.mobilecommerce.recogu;
 import android.annotation.SuppressLint;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -27,6 +28,7 @@ import com.google.android.gms.location.ActivityRecognition;
 
 import org.w3c.dom.Text;
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
@@ -62,7 +64,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
             String createTableQuery = "CREATE TABLE " + TABLE_NAME + "(" + ID + " INTEGER PRIMARY KEY AUTOINCREMENT," + TYPE + " TEXT NOT NULL, " + TIMESTAMP + " TEXT NOT NULL)";
             sqlDB.execSQL(createTableQuery);
         }catch(Exception e) {
-            Log.e("EXCEPTION", e.getStackTrace().toString());
+            e.printStackTrace();
         }
 
         mApiClient = new GoogleApiClient.Builder(this)
@@ -82,19 +84,36 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                 String timestamp = intent.getStringExtra(ActivityRecognizedService.ACTIVITY_RECOGNITION_TYPE_TIMESTAMP);
 
                 txtActivity.setText(activityName);
-                txtConfidence.setText(confidence);
+                txtConfidence.setText("Confidence: " + confidence);
                 imgActivity.setImageResource(icon);
 
-                String selectQuery = "SELECT * FROM " + TABLE_NAME + " ORDER BY " + ID + " DESC LIMIT 1;";
+                // Query for last activity
+                String selectQuery = "SELECT * FROM " + TABLE_NAME + " ORDER BY "+ TIMESTAMP + " DESC LIMIT 1";
                 Cursor cursor = sqlDB.rawQuery(selectQuery, null);
                 if (cursor.moveToFirst()) {
                     String lastTimestamp = cursor.getString(cursor.getColumnIndex(TIMESTAMP));
-                    int duration = (Integer.valueOf(lastTimestamp)-Integer.valueOf(timestamp))/1000;
-                    String toastText = Integer.toString(duration);
-                    Toast.makeText(getApplicationContext(), toastText, Toast.LENGTH_LONG).show();
-//                Toast.makeText(getApplicationContext(), timestamp, Toast.LENGTH_LONG).show();
+                    String lastActivity = cursor.getString(cursor.getColumnIndex(TYPE));
+                    SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+//                    int duration = (Integer.valueOf(lastTimestamp)-Integer.valueOf(timestamp))/1000;
+                    long duration = 0;
+                    try {
+                        duration = (simpleDateFormat.parse(timestamp).getTime() - simpleDateFormat.parse(lastTimestamp).getTime())/1000;
+                    } catch (ParseException e) {
+                        e.printStackTrace();
+                    }
+                    if(duration != 0 && !lastActivity.equals("")) {
+                        String toastText = "You have been " + lastActivity + " for " + Long.toString(duration) + " seconds";
+                        Toast.makeText(getApplicationContext(), toastText, Toast.LENGTH_LONG).show();
+//                        Toast.makeText(getApplicationContext(), timestamp, Toast.LENGTH_LONG).show();
+                    }
                 }
+                cursor.close();
 
+                // Insert start time for each new activity
+                ContentValues values = new ContentValues();
+                values.put(TYPE, activityName);
+                values.put(TIMESTAMP, timestamp);
+                sqlDB.insert(TABLE_NAME, null, values);
             }
         };
 
@@ -108,7 +127,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     public void onConnected(@Nullable Bundle bundle) {
         Intent intent = new Intent(this, ActivityRecognizedService.class);
         PendingIntent pendingIntent = PendingIntent.getService(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-        ActivityRecognition.ActivityRecognitionApi.requestActivityUpdates(mApiClient, 2000, pendingIntent);
+        ActivityRecognition.ActivityRecognitionApi.requestActivityUpdates(mApiClient, 1000, pendingIntent);
     }
 
     @Override
@@ -125,14 +144,21 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     @Override
     protected void onResume() {
         super.onResume();
-        displayGreeting();
+//        displayGreeting();
         startService(new Intent(this, ActivityRecognizedService.class));
     }
 
     @Override
     protected void onPause() {
         super.onPause();
+//        stopService(new Intent(this, ActivityRecognizedService.class));
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
         stopService(new Intent(this, ActivityRecognizedService.class));
+        sqlDB.delete(TABLE_NAME, null,null);
     }
 
     private void displayGreeting() {
