@@ -2,6 +2,7 @@ package com.csi5175.mobilecommerce.recogu;
 
 import android.app.IntentService;
 import android.content.Intent;
+import android.media.MediaPlayer;
 import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
@@ -24,6 +25,8 @@ public class ActivityRecognizedService extends IntentService{
     private static int LAST_ACTIVITY = 5;  // TILTING Constant Value: 3
     private static boolean hasMusic = false;
 
+    private static MediaPlayer player;
+
     public ActivityRecognizedService() {
         super("ActivityRecognizedService");
     }
@@ -34,6 +37,11 @@ public class ActivityRecognizedService extends IntentService{
             ActivityRecognitionResult result = ActivityRecognitionResult.extractResult(intent);
             handleDetectedActivities( result.getProbableActivities() );
         }
+    }
+
+    @Override
+    public void onDestroy() {
+        stopMusicService();
     }
 
     private void handleDetectedActivities(List<DetectedActivity> probableActivities) {
@@ -70,6 +78,7 @@ public class ActivityRecognizedService extends IntentService{
                         activityName = getString(R.string.activity_still);
                         icon = R.drawable.ic_still;
                         stopMusicService();
+//                        startMusicService();
                         break;
                     }
 
@@ -100,14 +109,26 @@ public class ActivityRecognizedService extends IntentService{
 
     private void startMusicService() {
         if(!hasMusic) {
-            startService(new Intent(ActivityRecognizedService.this, BackgroundMusicService.class));
+//            startService(new Intent(ActivityRecognizedService.this, BackgroundMusicService.class));
+            try
+            {
+                player = MediaPlayer.create(this, R.raw.zayn);
+                player.start();
+                Log.e("music", "music starts...");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
             hasMusic = true;
         }
     }
 
     private void stopMusicService() {
         if(hasMusic) {
-            stopService(new Intent(ActivityRecognizedService.this, BackgroundMusicService.class));
+//            stopService(new Intent(ActivityRecognizedService.this, BackgroundMusicService.class));
+            player.release();
+//            player = null;
+//            player.stop();
+            Log.e("music", "music stopped...");
             hasMusic = false;
         }
     }

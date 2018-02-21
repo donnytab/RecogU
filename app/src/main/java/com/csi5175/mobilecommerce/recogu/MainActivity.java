@@ -168,6 +168,6 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
 
         imgActivity.setImageResource(R.drawable.ic_frontpage);
         txtActivity.setGravity(Gravity.CENTER);
-        txtActivity.setText("Welcome back! \nCurrent date and time is \n" + time);
+        txtActivity.setText("Welcome back! \nCurrent time is \n" + time);
     }
 }
