@@ -22,6 +22,7 @@ public class ActivityRecognizedService extends IntentService{
     public static final String ACTIVITY_RECOGNITION_TYPE_TIMESTAMP = "TYPE_TIMESTAMP";
     public static final String ACTION = ActivityRecognizedService.class.getName();
     private static int LAST_ACTIVITY = 5;  // TILTING Constant Value: 3
+    private static boolean hasMusic = false;
 
     public ActivityRecognizedService() {
         super("ActivityRecognizedService");
@@ -56,39 +57,31 @@ public class ActivityRecognizedService extends IntentService{
                     case DetectedActivity.IN_VEHICLE: {
                         activityName = getString(R.string.activity_in_vehicle);
                         icon = R.drawable.ic_in_vehicle;
+                        stopMusicService();
                         break;
                     }
                     case DetectedActivity.RUNNING: {
                         activityName = getString(R.string.activity_running);
                         icon = R.drawable.ic_running;
+                        startMusicService();
                         break;
                     }
                     case DetectedActivity.STILL: {
                         activityName = getString(R.string.activity_still);
                         icon = R.drawable.ic_still;
+                        stopMusicService();
                         break;
                     }
 
                     case DetectedActivity.WALKING: {
                         activityName = getString(R.string.activity_walking);
                         icon = R.drawable.ic_walking;
-//                    if( activity.getConfidence() >= 75 ) {
-//                        NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
-//                        builder.setContentText( "Are you walking?" );
-//                        builder.setSmallIcon( R.mipmap.ic_launcher );
-//                        builder.setContentTitle( getString( R.string.app_name ) );
-//                        NotificationManagerCompat.from(this).notify(0, builder.build());
-//                    }
+                        startMusicService();
                         break;
                     }
                     default: {
                         break;
                     }
-//                    case DetectedActivity.UNKNOWN: {
-//                        activityName = getString(R.string.activity_unknown);
-//                        icon = R.drawable.ic_unknown;
-//                        break;
-//                    }
                 }
                 Log.e( "ActivityRecogition", activityName + activity.getConfidence() );
 
@@ -102,6 +95,20 @@ public class ActivityRecognizedService extends IntentService{
                     LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
                 }
             }
+        }
+    }
+
+    private void startMusicService() {
+        if(!hasMusic) {
+            startService(new Intent(ActivityRecognizedService.this, BackgroundMusicService.class));
+            hasMusic = true;
+        }
+    }
+
+    private void stopMusicService() {
+        if(hasMusic) {
+            stopService(new Intent(ActivityRecognizedService.this, BackgroundMusicService.class));
+            hasMusic = false;
         }
     }
 }
