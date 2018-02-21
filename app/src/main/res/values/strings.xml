@@ -5,4 +5,5 @@
     <string name="activity_still">STILL</string>
     <string name="activity_walking">WALKING</string>
     <string name="activity_unknown">UNKNOWN</string>
+    <string name="GOOGLE_API_KEY">AIzaSyBnIBfPR12pfhRRY6bSetPPq9BA1s4EIJw</string>
 </resources>
