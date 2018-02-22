@@ -11,8 +11,10 @@ import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Color;
 import android.location.Location;
 import android.location.LocationListener;
+import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
@@ -31,19 +33,27 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.PendingResult;
 import com.google.android.gms.location.ActivityRecognition;
 import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.LocationSettingsRequest;
+import com.google.android.gms.location.SettingsClient;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.Polyline;
+import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.tasks.OnSuccessListener;
 
 import org.w3c.dom.Text;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 
 public class MainActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, OnMapReadyCallback {
@@ -51,6 +61,11 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     public GoogleApiClient mApiClient;
     private FusedLocationProviderClient mFusedLocationClient;
     private SupportMapFragment mapFragment;
+    private LocationCallback mLocationCallback;
+    private LocationRequest mLocationRequest;
+    private LocationSettingsRequest locationSettingsRequest;
+    ArrayList<Location> locationList;
+
     private String mainName = MainActivity.class.getSimpleName();
     private TextView txtActivity, txtConfidence;
     private ImageView imgActivity;
@@ -69,6 +84,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         setContentView(R.layout.activity_main);
 
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+        locationList = new ArrayList<Location>();
 
         mapFragment = (SupportMapFragment)getSupportFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
@@ -95,6 +111,8 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                 .build();
 
         mApiClient.connect();
+
+        startLocationUpdates();
 
         BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
             @Override
@@ -219,6 +237,8 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                             googleMap.moveCamera(CameraUpdateFactory.newLatLng(currentLocation));
 //                            googleMap.animateCamera(CameraUpdateFactory.zoomIn());
                             googleMap.getUiSettings().setZoomControlsEnabled(true);
+
+                            updateMapRoute(googleMap);
                         }
                     }
                 });
@@ -234,5 +254,65 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         if(Manifest.permission.ACCESS_FINE_LOCATION.equals(permissions[0]) && (grantResults[0]==PackageManager.PERMISSION_GRANTED)) {
             mapFragment.getMapAsync(this);
         }
+    }
+
+    private void createLocationCallback() {
+        mLocationCallback = new LocationCallback() {
+            @Override
+            public void onLocationResult(LocationResult locationResult) {
+                super.onLocationResult(locationResult);
+                for(Location location : locationResult.getLocations()) {
+                    Log.e("location: ", location.getLatitude() + "," + location.getLongitude());
+                    locationList.add(location);
+                }
+                callMapAsync();
+
+            }
+        };
+    }
+
+    private void startLocationUpdates() {
+        // Create location request
+        mLocationRequest = new LocationRequest();
+        mLocationRequest.setInterval(10000);
+        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+
+        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder();
+        builder.addLocationRequest(mLocationRequest);
+        locationSettingsRequest = builder.build();
+
+        SettingsClient settingsClient = LocationServices.getSettingsClient(this);
+        settingsClient.checkLocationSettings(locationSettingsRequest);
+
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            Log.e("permission","no permission");
+            return;
+        }
+        createLocationCallback();
+        mFusedLocationClient.requestLocationUpdates(mLocationRequest, mLocationCallback, Looper.getMainLooper());
+    }
+
+    private void updateMapRoute(GoogleMap googleMap) {
+        for(int i=0; i<locationList.size()-1; i++) {
+            Location locationHead = locationList.get(i);
+            Location locationNext = locationList.get(i+1);
+            Polyline polyline = googleMap.addPolyline(new PolylineOptions()
+                    .clickable(true)
+                    .add(new LatLng(locationHead.getLatitude(), locationHead.getLongitude()), new LatLng(locationNext.getLatitude(), locationNext.getLongitude()))
+                    .width(5)
+                    .color(Color.BLUE));
+        }
+    }
+
+    private void callMapAsync() {
+        mapFragment.getMapAsync(this);
     }
 }
