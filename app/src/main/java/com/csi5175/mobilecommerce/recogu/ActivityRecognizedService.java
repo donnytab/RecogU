@@ -6,10 +6,12 @@ import android.media.MediaPlayer;
 import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
+import android.view.View;
 import android.widget.Toast;
 
 import com.google.android.gms.location.ActivityRecognitionResult;
 import com.google.android.gms.location.DetectedActivity;
+import com.google.android.gms.maps.SupportMapFragment;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -21,6 +23,7 @@ public class ActivityRecognizedService extends IntentService{
     public static final String ACTIVITY_RECOGNITION_TYPE_ICON = "TYPE_ICON";
     public static final String ACTIVITY_RECOGNITION_TYPE_CONFIDENCE = "TYPE_CONFIDENCE";
     public static final String ACTIVITY_RECOGNITION_TYPE_TIMESTAMP = "TYPE_TIMESTAMP";
+    public static final String ACTIVITY_RECOGNITION_MAP_STATUS = "MAP_STATUS";
     public static final String ACTION = ActivityRecognizedService.class.getName();
     private static int LAST_ACTIVITY = 5;  // TILTING Constant Value: 3
     private static boolean hasMusic = false;
@@ -53,6 +56,7 @@ public class ActivityRecognizedService extends IntentService{
                 String activityName = "";
                 String confidence = Integer.toString(activityConfidence);
                 int icon = 0;
+                int mapStatus = View.VISIBLE;
 
                 LAST_ACTIVITY = activityType;
 
@@ -79,6 +83,7 @@ public class ActivityRecognizedService extends IntentService{
                         icon = R.drawable.ic_still;
                         stopMusicService();
 //                        startMusicService();
+                        mapStatus = View.GONE;
                         break;
                     }
 
@@ -100,6 +105,7 @@ public class ActivityRecognizedService extends IntentService{
                     intent.putExtra(ACTIVITY_RECOGNITION_TYPE_CONFIDENCE, confidence);
                     intent.putExtra(ACTIVITY_RECOGNITION_TYPE_ICON, icon);
                     intent.putExtra(ACTIVITY_RECOGNITION_TYPE_TIMESTAMP, timestamp);
+                    intent.putExtra(ACTIVITY_RECOGNITION_MAP_STATUS, mapStatus);
                     intent.setFlags(intent.FLAG_RECEIVER_FOREGROUND);
                     LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
                 }

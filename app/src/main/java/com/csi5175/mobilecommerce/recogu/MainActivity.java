@@ -121,10 +121,12 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                 String confidence = intent.getStringExtra(ActivityRecognizedService.ACTIVITY_RECOGNITION_TYPE_CONFIDENCE);
                 int icon = intent.getIntExtra(ActivityRecognizedService.ACTIVITY_RECOGNITION_TYPE_ICON, 0);
                 String timestamp = intent.getStringExtra(ActivityRecognizedService.ACTIVITY_RECOGNITION_TYPE_TIMESTAMP);
+                int mapStatus = intent.getIntExtra(ActivityRecognizedService.ACTIVITY_RECOGNITION_MAP_STATUS, 0);
 
                 txtActivity.setText(activityName);
                 txtConfidence.setText("Confidence: " + confidence);
                 imgActivity.setImageResource(icon);
+                mapFragment.getView().setVisibility(mapStatus);
 
                 // Query for last activity
                 String selectQuery = "SELECT * FROM " + TABLE_NAME + " ORDER BY " + TIMESTAMP + " DESC LIMIT 1";
