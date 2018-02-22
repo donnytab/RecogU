@@ -231,12 +231,17 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                     @Override
                     public void onSuccess(Location location) {
                         if (location != null) {
+                            googleMap.clear();
                             Log.e("location","has location");
                             LatLng currentLocation = new LatLng(location.getLatitude(), location.getLongitude());
                             googleMap.addMarker(new MarkerOptions().position(currentLocation).title("You are here"));
                             googleMap.moveCamera(CameraUpdateFactory.newLatLng(currentLocation));
 //                            googleMap.animateCamera(CameraUpdateFactory.zoomIn());
                             googleMap.getUiSettings().setZoomControlsEnabled(true);
+
+                            if(locationList.size() == 0) {
+                                locationList.add(location);
+                            }
 
                             updateMapRoute(googleMap);
                         }
@@ -304,10 +309,10 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         for(int i=0; i<locationList.size()-1; i++) {
             Location locationHead = locationList.get(i);
             Location locationNext = locationList.get(i+1);
-            Polyline polyline = googleMap.addPolyline(new PolylineOptions()
+            googleMap.addPolyline(new PolylineOptions()
                     .clickable(true)
                     .add(new LatLng(locationHead.getLatitude(), locationHead.getLongitude()), new LatLng(locationNext.getLatitude(), locationNext.getLongitude()))
-                    .width(5)
+                    .width(20)
                     .color(Color.BLUE));
         }
     }
