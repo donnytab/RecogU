@@ -169,7 +169,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     public void onConnected(@Nullable Bundle bundle) {
         Intent intent = new Intent(this, ActivityRecognizedService.class);
         PendingIntent pendingIntent = PendingIntent.getService(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-        ActivityRecognition.ActivityRecognitionApi.requestActivityUpdates(mApiClient, 1000, pendingIntent);
+        ActivityRecognition.ActivityRecognitionApi.requestActivityUpdates(mApiClient, 5000, pendingIntent);
     }
 
     @Override
@@ -193,7 +193,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     @Override
     protected void onPause() {
         super.onPause();
-//        stopService(new Intent(this, ActivityRecognizedService.class));
+        stopService(new Intent(this, ActivityRecognizedService.class));
     }
 
     @Override

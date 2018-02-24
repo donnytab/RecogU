@@ -44,7 +44,7 @@ public class ActivityRecognizedService extends IntentService{
 
     @Override
     public void onDestroy() {
-        stopMusicService();
+//        stopMusicService("destory");
     }
 
     private void handleDetectedActivities(List<DetectedActivity> probableActivities) {
@@ -52,7 +52,7 @@ public class ActivityRecognizedService extends IntentService{
             int activityType = activity.getType();
             int activityConfidence = activity.getConfidence();
 
-            if(activityType != LAST_ACTIVITY && activityConfidence > 30) {
+            if(activityType != LAST_ACTIVITY && activityConfidence > 40) {
                 String activityName = "";
                 String confidence = Integer.toString(activityConfidence);
                 int icon = 0;
@@ -69,7 +69,7 @@ public class ActivityRecognizedService extends IntentService{
                     case DetectedActivity.IN_VEHICLE: {
                         activityName = getString(R.string.activity_in_vehicle);
                         icon = R.drawable.ic_in_vehicle;
-                        stopMusicService();
+                        stopMusicService(activityName);
                         break;
                     }
                     case DetectedActivity.RUNNING: {
@@ -81,7 +81,7 @@ public class ActivityRecognizedService extends IntentService{
                     case DetectedActivity.STILL: {
                         activityName = getString(R.string.activity_still);
                         icon = R.drawable.ic_still;
-                        stopMusicService();
+                        stopMusicService(activityName);
 //                        startMusicService();
                         mapStatus = View.GONE;
                         break;
@@ -128,13 +128,13 @@ public class ActivityRecognizedService extends IntentService{
         }
     }
 
-    private void stopMusicService() {
+    private void stopMusicService(String name) {
         if(hasMusic) {
 //            stopService(new Intent(ActivityRecognizedService.this, BackgroundMusicService.class));
             player.release();
 //            player = null;
 //            player.stop();
-            Log.e("music", "music stopped...");
+            Log.e("music", "music stopped..." + name);
             hasMusic = false;
         }
     }
