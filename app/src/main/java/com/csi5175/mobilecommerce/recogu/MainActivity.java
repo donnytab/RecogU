@@ -114,6 +114,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
 
         startLocationUpdates();
 
+
         BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
@@ -258,8 +259,10 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
             return;
         }
 
-        if(Manifest.permission.ACCESS_FINE_LOCATION.equals(permissions[0]) && (grantResults[0]==PackageManager.PERMISSION_GRANTED)) {
-            mapFragment.getMapAsync(this);
+        if(permissions.length != 0 && grantResults.length != 0) {
+            if(Manifest.permission.ACCESS_FINE_LOCATION.equals(permissions[0]) && (grantResults[0]==PackageManager.PERMISSION_GRANTED)) {
+                mapFragment.getMapAsync(this);
+            }
         }
     }
 
@@ -281,7 +284,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     private void startLocationUpdates() {
         // Create location request
         mLocationRequest = new LocationRequest();
-        mLocationRequest.setInterval(10000);
+        mLocationRequest.setInterval(5000);
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
 
         LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder();
@@ -301,7 +304,8 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
             // to handle the case where the user grants the permission. See the documentation
             // for ActivityCompat#requestPermissions for more details.
             Log.e("permission","no permission");
-            return;
+            System.exit(0);
+//            return;
         }
         createLocationCallback();
         mFusedLocationClient.requestLocationUpdates(mLocationRequest, mLocationCallback, Looper.getMainLooper());
