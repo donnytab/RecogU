@@ -41,22 +41,27 @@ public class ActivityRecognizedService extends IntentService{
     public void onDestroy() {}
 
     private void handleDetectedActivities(List<DetectedActivity> probableActivities) {
+        // Handle all detected results
         for( DetectedActivity activity : probableActivities ) {
             int activityType = activity.getType();
             int activityConfidence = activity.getConfidence();
 
+            // Display activity when the result activity is not the same with the last one & with high confidence of 40
             if(activityType != LAST_ACTIVITY && activityConfidence > 40) {
                 String activityName = "";
                 String confidence = Integer.toString(activityConfidence);
                 int icon = 0;
                 int mapStatus = View.VISIBLE;
 
+                // Change last activity
                 LAST_ACTIVITY = activityType;
 
+                // Get current time
                 Calendar calendar = Calendar.getInstance();
                 SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                 String timestamp = simpleDateFormat.format(calendar.getTime());
 
+                // Handle 4 types of activities
                 switch(activityType) {
                     case DetectedActivity.IN_VEHICLE: {
                         activityName = getString(R.string.activity_in_vehicle);
@@ -90,6 +95,7 @@ public class ActivityRecognizedService extends IntentService{
                 }
                 Log.e( "ActivityRecogition", activityName + activity.getConfidence() );
 
+                // Case for non-empty result
                 if(!activityName.equals("") && !confidence.equals("")) {
                     Intent intent = new Intent(ACTION);
                     intent.putExtra(ACTIVITY_RECOGNITION_TYPE_NAME, activityName);
@@ -98,12 +104,15 @@ public class ActivityRecognizedService extends IntentService{
                     intent.putExtra(ACTIVITY_RECOGNITION_TYPE_TIMESTAMP, timestamp);
                     intent.putExtra(ACTIVITY_RECOGNITION_MAP_STATUS, mapStatus);
                     intent.setFlags(intent.FLAG_RECEIVER_FOREGROUND);
+
+                    // Broadcast intent message
                     LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
                 }
             }
         }
     }
 
+    // Play background music
     private void startMusicService() {
         if(!hasMusic) {
             try
@@ -118,6 +127,7 @@ public class ActivityRecognizedService extends IntentService{
         }
     }
 
+    // Stop background music
     private void stopMusicService(String name) {
         if(hasMusic) {
             player.release();
