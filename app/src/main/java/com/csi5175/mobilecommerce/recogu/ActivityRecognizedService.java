@@ -3,16 +3,11 @@ package com.csi5175.mobilecommerce.recogu;
 import android.app.IntentService;
 import android.content.Intent;
 import android.media.MediaPlayer;
-import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.View;
-import android.widget.Toast;
-
 import com.google.android.gms.location.ActivityRecognitionResult;
 import com.google.android.gms.location.DetectedActivity;
-import com.google.android.gms.maps.SupportMapFragment;
-
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.List;
@@ -43,9 +38,7 @@ public class ActivityRecognizedService extends IntentService{
     }
 
     @Override
-    public void onDestroy() {
-//        stopMusicService("destory");
-    }
+    public void onDestroy() {}
 
     private void handleDetectedActivities(List<DetectedActivity> probableActivities) {
         for( DetectedActivity activity : probableActivities ) {
@@ -63,7 +56,6 @@ public class ActivityRecognizedService extends IntentService{
                 Calendar calendar = Calendar.getInstance();
                 SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                 String timestamp = simpleDateFormat.format(calendar.getTime());
-//                int timestamp = Integer.parseInt(simpleDateFormat.format(calendar.getTime()));
 
                 switch(activityType) {
                     case DetectedActivity.IN_VEHICLE: {
@@ -82,7 +74,6 @@ public class ActivityRecognizedService extends IntentService{
                         activityName = getString(R.string.activity_still);
                         icon = R.drawable.ic_still;
                         stopMusicService(activityName);
-//                        startMusicService();
                         mapStatus = View.GONE;
                         break;
                     }
@@ -115,7 +106,6 @@ public class ActivityRecognizedService extends IntentService{
 
     private void startMusicService() {
         if(!hasMusic) {
-//            startService(new Intent(ActivityRecognizedService.this, BackgroundMusicService.class));
             try
             {
                 player = MediaPlayer.create(this, R.raw.zayn);
@@ -130,10 +120,7 @@ public class ActivityRecognizedService extends IntentService{
 
     private void stopMusicService(String name) {
         if(hasMusic) {
-//            stopService(new Intent(ActivityRecognizedService.this, BackgroundMusicService.class));
             player.release();
-//            player = null;
-//            player.stop();
             Log.e("music", "music stopped..." + name);
             hasMusic = false;
         }

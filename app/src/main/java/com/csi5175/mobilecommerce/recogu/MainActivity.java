@@ -13,7 +13,6 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
 import android.location.Location;
-import android.location.LocationListener;
 import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -23,14 +22,11 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Gravity;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.PendingResult;
 import com.google.android.gms.location.ActivityRecognition;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
@@ -45,12 +41,8 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.tasks.OnSuccessListener;
-
-import org.w3c.dom.Text;
-
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -75,7 +67,6 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     private static final String TYPE = "type";
     private static final String TIMESTAMP = "timestamp";
     private SQLiteDatabase sqlDB;
-    private Cursor cursor;
 
     @SuppressLint("WrongConstant")
     @Override
@@ -96,7 +87,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         displayGreeting();
 
         sqlDB = openOrCreateDatabase(DATABASE_NAME, SQLiteDatabase.CREATE_IF_NECESSARY, null);
-//        cursor = sqlDB.query(TABLE_NAME, null, null, null, null, null, null);
+
         try {
             String createTableQuery = "CREATE TABLE " + TABLE_NAME + "(" + ID + " INTEGER PRIMARY KEY AUTOINCREMENT," + TYPE + " TEXT NOT NULL, " + TIMESTAMP + " TEXT NOT NULL)";
             sqlDB.execSQL(createTableQuery);
@@ -136,7 +127,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                     String lastTimestamp = cursor.getString(cursor.getColumnIndex(TIMESTAMP));
                     String lastActivity = cursor.getString(cursor.getColumnIndex(TYPE));
                     SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-//                    int duration = (Integer.valueOf(lastTimestamp)-Integer.valueOf(timestamp))/1000;
+
                     long duration = 0;
                     try {
                         duration = (simpleDateFormat.parse(timestamp).getTime() - simpleDateFormat.parse(lastTimestamp).getTime()) / 1000;
@@ -146,7 +137,6 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                     if (duration != 0 && !lastActivity.equals("")) {
                         String toastText = "You have been " + lastActivity + " for " + Long.toString(duration) + " seconds";
                         Toast.makeText(getApplicationContext(), toastText, Toast.LENGTH_LONG).show();
-//                        Toast.makeText(getApplicationContext(), timestamp, Toast.LENGTH_LONG).show();
                     }
                 }
                 cursor.close();
@@ -186,7 +176,6 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     @Override
     protected void onResume() {
         super.onResume();
-//        displayGreeting();
         startService(new Intent(this, ActivityRecognizedService.class));
     }
 
@@ -227,16 +216,10 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
 
     @Override
     public void onMapReady(final GoogleMap googleMap) {
-//        Location location = LocationServices.FusedLocationApi.getLastLocation(mApiClient);
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
-            // TODO: Consider calling
             //    ActivityCompat#requestPermissions
             // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
             Log.e("permission","no permission");
             return;
         }
@@ -251,7 +234,6 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                             LatLng currentLocation = new LatLng(location.getLatitude(), location.getLongitude());
                             googleMap.addMarker(new MarkerOptions().position(currentLocation).title("You are here"));
                             googleMap.moveCamera(CameraUpdateFactory.newLatLng(currentLocation));
-//                            googleMap.animateCamera(CameraUpdateFactory.zoomIn());
                             googleMap.getUiSettings().setZoomControlsEnabled(true);
 
                             if(locationList.size() == 0) {
@@ -308,16 +290,10 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
-            // TODO: Consider calling
             //    ActivityCompat#requestPermissions
             // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
             Log.e("permission","no permission");
             System.exit(0);
-//            return;
         }
         createLocationCallback();
         mFusedLocationClient.requestLocationUpdates(mLocationRequest, mLocationCallback, Looper.getMainLooper());
