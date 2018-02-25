@@ -74,20 +74,25 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        // Initialize FusedLocationClient
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
         locationList = new ArrayList<Location>();
 
+        // Initialize fragment for Google Maps
         mapFragment = (SupportMapFragment)getSupportFragmentManager().findFragmentById(R.id.map);
-        mapFragment.getMapAsync(this);
+        callMapAsync();
 
         txtActivity = findViewById(R.id.txt_activity);
         txtConfidence = findViewById(R.id.txt_confidence);
         imgActivity = (ImageView) findViewById(R.id.img_activity);
 
+        // Show greeting
         displayGreeting();
 
+        // Create database
         sqlDB = openOrCreateDatabase(DATABASE_NAME, SQLiteDatabase.CREATE_IF_NECESSARY, null);
 
+        // Create table for all detected activities
         try {
             String createTableQuery = "CREATE TABLE " + TABLE_NAME + "(" + ID + " INTEGER PRIMARY KEY AUTOINCREMENT," + TYPE + " TEXT NOT NULL, " + TIMESTAMP + " TEXT NOT NULL)";
             sqlDB.execSQL(createTableQuery);
@@ -103,9 +108,10 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
 
         mApiClient.connect();
 
+        // Check location permission & async map
         startLocationUpdates();
 
-
+        // Create BroadcastReceiver for ActivityRecognizedService
         BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
@@ -115,6 +121,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                 String timestamp = intent.getStringExtra(ActivityRecognizedService.ACTIVITY_RECOGNITION_TYPE_TIMESTAMP);
                 int mapStatus = intent.getIntExtra(ActivityRecognizedService.ACTIVITY_RECOGNITION_MAP_STATUS, 0);
 
+                // Display result
                 txtActivity.setText(activityName);
                 txtConfidence.setText("Confidence: " + confidence);
                 imgActivity.setImageResource(icon);
@@ -130,10 +137,13 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
 
                     long duration = 0;
                     try {
+                        // Calculate duration time between last activity and current activity
                         duration = (simpleDateFormat.parse(timestamp).getTime() - simpleDateFormat.parse(lastTimestamp).getTime()) / 1000;
                     } catch (ParseException e) {
                         e.printStackTrace();
                     }
+
+                    // Display duration time with toast text
                     if (duration != 0 && !lastActivity.equals("")) {
                         String toastText = "You have been " + lastActivity + " for " + Long.toString(duration) + " seconds";
                         Toast.makeText(getApplicationContext(), toastText, Toast.LENGTH_LONG).show();
@@ -149,6 +159,8 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
             }
         };
 
+
+        // Setup LocalBroadcastManager
         LocalBroadcastManager.getInstance(this).registerReceiver(
                 broadcastReceiver,
                 new IntentFilter(ActivityRecognizedService.ACTION)
@@ -229,13 +241,17 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                     @Override
                     public void onSuccess(Location location) {
                         if (location != null) {
+                            // Clear previous markers
                             googleMap.clear();
                             Log.e("location","has location");
+
+                            // Display current location with marker
                             LatLng currentLocation = new LatLng(location.getLatitude(), location.getLongitude());
                             googleMap.addMarker(new MarkerOptions().position(currentLocation).title("You are here"));
                             googleMap.moveCamera(CameraUpdateFactory.newLatLng(currentLocation));
                             googleMap.getUiSettings().setZoomControlsEnabled(true);
 
+                            // The initial location
                             if(locationList.size() == 0) {
                                 locationList.add(location);
                             }
@@ -253,9 +269,10 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
             return;
         }
 
+        // Permission granted
         if(permissions.length != 0 && grantResults.length != 0) {
             if(Manifest.permission.ACCESS_FINE_LOCATION.equals(permissions[0]) && (grantResults[0]==PackageManager.PERMISSION_GRANTED)) {
-                mapFragment.getMapAsync(this);
+                callMapAsync();
             }
         }
     }
@@ -265,6 +282,8 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
             @Override
             public void onLocationResult(LocationResult locationResult) {
                 super.onLocationResult(locationResult);
+
+                // Retrieve all location results
                 for(Location location : locationResult.getLocations()) {
                     Log.e("location: ", location.getLatitude() + "," + location.getLongitude());
                     locationList.add(location);
@@ -288,21 +307,29 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         SettingsClient settingsClient = LocationServices.getSettingsClient(this);
         settingsClient.checkLocationSettings(locationSettingsRequest);
 
+        // Check location permission
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
             //    ActivityCompat#requestPermissions
             // here to request the missing permissions, and then overriding
             Log.e("permission","no permission");
+
+            // Exit current activity
             System.exit(0);
         }
+
+        // Create periodical callbacks
         createLocationCallback();
         mFusedLocationClient.requestLocationUpdates(mLocationRequest, mLocationCallback, Looper.getMainLooper());
     }
 
+    // Update route in map
     private void updateMapRoute(GoogleMap googleMap) {
         for(int i=0; i<locationList.size()-1; i++) {
             Location locationHead = locationList.get(i);
             Location locationNext = locationList.get(i+1);
+
+            // Draw lines between locations
             googleMap.addPolyline(new PolylineOptions()
                     .clickable(true)
                     .add(new LatLng(locationHead.getLatitude(), locationHead.getLongitude()), new LatLng(locationNext.getLatitude(), locationNext.getLongitude()))
@@ -311,6 +338,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         }
     }
 
+    // Update Google maps
     private void callMapAsync() {
         mapFragment.getMapAsync(this);
     }
